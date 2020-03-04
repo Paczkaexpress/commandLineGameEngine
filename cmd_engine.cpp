@@ -35,6 +35,15 @@ namespace cmd {
         if (hStdOut == INVALID_HANDLE_VALUE) {
             return;
         }
+
+        CONSOLE_FONT_INFOEX info = {0};
+        info.cbSize       = sizeof(info);
+        info.dwFontSize.Y = 5; // leave X as zero
+        info.FontWeight   = FW_NORMAL;
+        wcscpy(info.FaceName, L"Lucida Console");
+        SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), NULL, &info);
+//        SetConsoleDisplayMode(GetStdHandle(STD_OUTPUT_HANDLE),CONSOLE_FULLSCREEN_MODE,0);
+        ShowWindow(GetConsoleWindow(),SW_MAXIMIZE);
     }
 
     CmdGraphicEngine::~CmdGraphicEngine() {
