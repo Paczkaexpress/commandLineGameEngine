@@ -39,6 +39,7 @@ namespace cmd {
         CONSOLE_FONT_INFOEX info = {0};
         info.cbSize       = sizeof(info);
         info.dwFontSize.Y = 5; // leave X as zero
+        info.dwFontSize.X = 5;
         info.FontWeight   = FW_NORMAL;
         wcscpy(info.FaceName, L"Lucida Console");
         SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), NULL, &info);
@@ -54,8 +55,7 @@ namespace cmd {
         for (int j = 0; j < cmdSize.Y; j++) {
             for (int i = 0; i < cmdSize.X; i++) {
                 bufCmd[i + j * cmdSize.X].Char.AsciiChar = (char) rand() % 256;
-                bufCmd[i + j * cmdSize.X].Attributes = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN
-                                                       | FOREGROUND_BLUE;
+                bufCmd[i + j * cmdSize.X].Attributes = FOREGROUND_INTENSITY | FG_WHITE;
             }
         }
     }
@@ -63,9 +63,7 @@ namespace cmd {
     void CmdGraphicEngine::cmdOut(std::string s) {
         for (int i = 0; i < s.length(); i++) {
             bufCmd[i].Char.AsciiChar = s[i];
-            bufCmd[i].Attributes = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN
-                                   | FOREGROUND_BLUE;
-
+            bufCmd[i].Attributes = FOREGROUND_INTENSITY | FG_WHITE;
         }
 
         WriteConsoleOutputA(hStdOut, bufCmd, cmdSize, homeCoords, &consoleRect);
@@ -105,10 +103,6 @@ namespace cmd {
         return InRec;
     }
 
-    bool CmdGraphicEngine::isExitFlagSet(void) {
-        return this->_exitFlag;
-    }
-
     void CmdGraphicEngine::drawLine(COORD st, COORD end)
     {
         // y = ax + b
@@ -138,16 +132,27 @@ namespace cmd {
         const float pi = 3.14;
         int circumference = (float)(2 * pi * radius);
         float angleUpdate = 2.0 * pi / circumference;
-        int posx = 0;
-        int posy = 0;
+        int posX = 0;
+        int posY = 0;
         for(int i = 0; i < circumference; i++)
         {
-            posx = center.X + (int)(radius * sin(angleUpdate * (float)i));
-            posy = center.Y + (int)(radius * cos(angleUpdate * (float)i));
-            this->bufCmd[posx + posy * cmdSize.X].Char.AsciiChar = '#';
-            this->bufCmd[posx + posy * cmdSize.X].Attributes = FG_WHITE;
+            posX = center.X + (int)(radius * sin(angleUpdate * (float)i));
+            posY = center.Y + (int)(radius * cos(angleUpdate * (float)i));
+            this->bufCmd[posX + posY * cmdSize.X].Char.AsciiChar = '#';
+            this->bufCmd[posX + posY * cmdSize.X].Attributes = FG_WHITE;
         }
 
+    }
+
+    char CmdGraphicEngine::getLastKeyboardAction(void)
+    {
+        return this->lastlyPressedButton;
+    }
+
+    void CmdGraphicEngine::setBufferElement(int posX, int posY, char shape)
+    {
+        this->bufCmd[posX + posY * cmdSize.X].Char.AsciiChar = shape;
+        this->bufCmd[posX + posY * cmdSize.X].Attributes = FG_WHITE;
     }
 
     void CmdGraphicEngine::handleKeyboardAction(void) {
@@ -157,21 +162,25 @@ namespace cmd {
         INPUT_RECORD eventBuffer[InRecSize];
         ReadConsoleInput(this->hIn, eventBuffer, InRecSize, &this->NumRead);
 
+        this->lastlyPressedButton = ' ';
         for (int i = 0; i < InRecSize; i++) {
             if (eventBuffer[i].Event.KeyEvent.uChar.AsciiChar && eventBuffer[i].Event.KeyEvent.bKeyDown) {
                 this->clearScreen();
                 switch (eventBuffer[i].Event.KeyEvent.uChar.AsciiChar) {
                     case 'w':
-                        this->cmdOut("w");
+                        this->lastlyPressedButton = 'w';
                         break;
                     case 's':
-                        this->cmdOut("s");
+                        this->lastlyPressedButton = 's';
                         break;
                     case 'a':
-                        this->cmdOut("a");
+                        this->lastlyPressedButton = 'a';
                         break;
                     case 'd':
-                        this->cmdOut("d");
+                        this->lastlyPressedButton = 'd';
+                        break;
+                    case 'q':
+                        this->lastlyPressedButton = 'q';
                         break;
                 }
             }

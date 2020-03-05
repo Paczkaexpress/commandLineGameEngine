@@ -59,8 +59,7 @@ namespace cmd
         std::string gameName;
 
     private:
-        bool _exitFlag = false;
-
+        char lastlyPressedButton = ' ';
     protected:
         CHAR_INFO *bufCmd;
 
@@ -86,9 +85,11 @@ namespace cmd
 
         INPUT_RECORD getConsoleInput();
 
-        bool isExitFlagSet(void);
-
         void handleKeyboardAction(void);
+
+        char getLastKeyboardAction(void);
+
+        void setBufferElement(int posX, int posY, char shape);
 
         void drawLine(COORD st, COORD end);
 
